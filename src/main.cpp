@@ -1,9 +1,12 @@
 #include <Arduino.h>
 #include "ssd1306.h"
 #include "ssd1306_console.h"
+#include "SparkFun_SCD30_Arduino_Library.h"
 
 #include "nano_engine.h"
 #include "sova.h"
+
+SCD30 airSensor;
 
 /*
  * Heart image below is defined directly in flash memory.
@@ -98,6 +101,32 @@ const char *menuItems[] =
         "fonts",
 };
 
+void calibrateSensor()
+{
+  // measurement interval in seconds
+  airSensor.setMeasurementInterval(2);
+  // approx. altitude of Dresden, Saxony in meters
+  airSensor.setAltitudeCompensation(112);
+  // approx. avg. pressure in Dresden, Saxony in mBar
+  airSensor.setAmbientPressure(1020);
+  // estimated temperature difference between the sensor and its
+  // surroundings that would be caused by self-heating during operation
+  airSensor.setTemperatureOffset(2);
+}
+
+void startSensor()
+{
+  bool sensorReady = airSensor.begin();
+  if (!sensorReady)
+  {
+    Serial.println("Sensor wiring or setup faulty. Not continuing...");
+    while (true)
+    {
+      ;
+    }
+  }
+}
+
 void waitForSerialConnection()
 {
   while (!Serial)
@@ -113,10 +142,18 @@ void startSerialConnection()
   waitForSerialConnection();
 }
 
+void setupI2C()
+{
+  Wire.begin();
+}
+
 void setup()
 {
   startSerialConnection();
-  Serial.println("setup");
+
+  setupI2C();
+  startSensor();
+  calibrateSensor();
 
   ssd1306_setFixedFont(ssd1306xled_font6x8);
   ssd1331_96x64_spi_init(14, 4, 21); // (gpio22=RST, gpio5=CE for VSPI, gpio21=D/C)
@@ -125,8 +162,6 @@ void setup()
   // RGB functions do not work in default SSD1306 compatible mode
   ssd1306_setMode(LCD_MODE_NORMAL);
   ssd1306_clearScreen8();
-  ssd1306_createMenu(&menu, menuItems, sizeof(menuItems) / sizeof(char *));
-  ssd1306_showMenu8(&menu);
 }
 
 NanoEngine8 engine;
@@ -169,24 +204,15 @@ static void drawLinesDemo()
 
 void loop()
 {
+  int co2 = airSensor.getCO2();
+  float temperature = airSensor.getTemperature();
+
   delay(1000);
-  switch (ssd1306_menuSelection(&menu))
-  {
-  case 0:
-    drawLinesDemo();
-    break;
-
-  case 1:
-    textDemo();
-    break;
-
-  default:
-    break;
-  }
+  String text = String(co2);
   ssd1306_clearScreen8();
-  ssd1306_setColor(RGB_COLOR8(255, 255, 255));
-  ssd1306_showMenu8(&menu);
-  delay(500);
-  ssd1306_menuDown(&menu);
-  ssd1306_updateMenu8(&menu);
+  ssd1306_setFixedFont(ssd1306xled_font8x16);
+  ssd1306_setColor(RGB_COLOR8(153, 0, 204));
+  char text2[5];
+  text.toCharArray(text2, 5);
+  ssd1306_printFixed8(25, 25, text2, STYLE_BOLD);
 }
