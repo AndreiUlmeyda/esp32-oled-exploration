@@ -89,7 +89,6 @@ void shiftHistory()
 
 void loop()
 {
-  Serial.println("derp");
   if (airSensor.dataAvailable())
   {
     co2 = airSensor.getCO2();
