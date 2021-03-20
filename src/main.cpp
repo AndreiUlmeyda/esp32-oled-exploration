@@ -7,7 +7,7 @@ SCD30 airSensor;
 void calibrateSensor()
 {
   // measurement interval in seconds
-  airSensor.setMeasurementInterval(1);
+  airSensor.setMeasurementInterval(2);
   // approx. altitude of Dresden, Saxony in meters
   airSensor.setAltitudeCompensation(112);
   // approx. avg. pressure in Dresden, Saxony in mBar
