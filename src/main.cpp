@@ -36,6 +36,7 @@ void waitForSerialConnection()
   {
     ;
   }
+  delay(1500); // another short while to let the serial monitor start in time
 }
 
 void startSerialConnection()
