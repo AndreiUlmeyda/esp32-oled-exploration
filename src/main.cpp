@@ -59,6 +59,9 @@ void setup()
   startSensor();
   calibrateSensor();
 
+  pinMode(32, OUTPUT);
+  digitalWrite(32, HIGH);
+
   ssd1306_setFixedFont(ssd1306xled_font6x8);
   ssd1331_96x64_spi_init(14, 4, 21); // (gpio14=RST, gpio4=CS, gpio21=D/C)
   // VCCEN needs to be pulled to VCC to turn on the display
